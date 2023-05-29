@@ -68,7 +68,7 @@ func (m *WriteJSON) Write(ctx context.Context, out thrift.TProtocol, msg interfa
 	}
 
 	// msg is void
-	if _, ok := msg.(descriptor.Void); ok {
+	if _, ok := msg.(descriptor.Void); ok || msg == nil {
 		return wrapStructWriter(ctx, msg, out, m.ty, &writerOption{requestBase: requestBase, binaryWithBase64: m.base64Binary})
 	}
 
