@@ -434,7 +434,7 @@ func testThriftVoidMethodWithDynamicGo(t *testing.T) {
 
 func testThrift2NormalServer(t *testing.T) {
 	time.Sleep(4 * time.Second)
-	svr := initMockServer(t, new(mockImpl))
+	svr := initMockServer(new(mockImpl))
 	time.Sleep(500 * time.Millisecond)
 
 	// client without dynamicgo
@@ -452,7 +452,7 @@ func testThrift2NormalServer(t *testing.T) {
 
 func testThriftException(t *testing.T) {
 	time.Sleep(4 * time.Second)
-	svr := initMockServer(t, new(mockImpl))
+	svr := initMockServer(new(mockImpl))
 	time.Sleep(500 * time.Millisecond)
 
 	// client without dynamicgo
@@ -471,6 +471,21 @@ func testThriftException(t *testing.T) {
 
 	svr.Stop()
 }
+
+//func testNormalClient2Thrift(t *testing.T) {
+//	time.Sleep(1 * time.Second)
+//	svr := initThriftServer(t, ":8129", new(GenericServiceImpl), "./idl/mock.thrift", nil, nil, false)
+//	time.Sleep(500 * time.Millisecond)
+//
+//	// normal client
+//	cli := initMockClient()
+//	resp, err := cli.Test(context.Background(), &kt.MockReq{Msg: "this is request"})
+//	test.Assert(t, err == nil, err)
+//	fmt.Println(resp)
+//	// TODO: test.Assert
+//
+//	svr.Stop()
+//}
 
 func testThriftRawBinaryEcho(t *testing.T) {
 	var opts []generic.Option
@@ -634,11 +649,18 @@ func initThriftServer(t *testing.T, address string, handler generic.Service, idl
 	return svr
 }
 
-func initMockServer(t *testing.T, handler kt.Mock) server.Server {
+func initMockServer(handler kt.Mock) server.Server {
 	addr, _ := net.ResolveTCPAddr("tcp", ":8128")
 	svr := newMockServer(handler, addr)
 	return svr
 }
+
+//func initMockClient() *kt.MockClient {
+//	var opts []client.Option
+//	opts = append(opts, client.WithHostPorts("127.0.0.1:8129"), client.WithTransportProtocol(transport.TTHeader))
+//	kc, _ := client.NewClient(serviceInfo(), opts...)
+//	return kt.NewMockClient(kc)
+//}
 
 func testJSONThriftGenericClientClose(t *testing.T) {
 	debug.SetGCPercent(-1)
