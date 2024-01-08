@@ -50,7 +50,7 @@ type clientTTHeaderHandler struct{}
 
 // WriteMeta of clientTTHeaderHandler writes headers of TTHeader protocol to transport
 func (ch *clientTTHeaderHandler) WriteMeta(ctx context.Context, msg remote.Message) (context.Context, error) {
-	if !remote.IsTTHeader(msg) {
+	if !isTTHeader(msg) {
 		return ctx, nil
 	}
 	ri := msg.RPCInfo()
@@ -75,7 +75,7 @@ func (ch *clientTTHeaderHandler) WriteMeta(ctx context.Context, msg remote.Messa
 
 // ReadMeta of clientTTHeaderHandler reads headers of TTHeader protocol from transport
 func (ch *clientTTHeaderHandler) ReadMeta(ctx context.Context, msg remote.Message) (context.Context, error) {
-	if !remote.IsTTHeader(msg) {
+	if !isTTHeader(msg) {
 		return ctx, nil
 	}
 	ri := msg.RPCInfo()
@@ -103,7 +103,7 @@ type serverTTHeaderHandler struct{}
 
 // ReadMeta of serverTTHeaderHandler reads headers of TTHeader protocol to transport
 func (sh *serverTTHeaderHandler) ReadMeta(ctx context.Context, msg remote.Message) (context.Context, error) {
-	if !remote.IsTTHeader(msg) {
+	if !isTTHeader(msg) {
 		return ctx, nil
 	}
 	ri := msg.RPCInfo()
@@ -124,7 +124,7 @@ func (sh *serverTTHeaderHandler) ReadMeta(ctx context.Context, msg remote.Messag
 
 // WriteMeta of serverTTHeaderHandler writes headers of TTHeader protocol to transport
 func (sh *serverTTHeaderHandler) WriteMeta(ctx context.Context, msg remote.Message) (context.Context, error) {
-	if !remote.IsTTHeader(msg) {
+	if !isTTHeader(msg) {
 		return ctx, nil
 	}
 	ri := msg.RPCInfo()
@@ -143,4 +143,9 @@ func (sh *serverTTHeaderHandler) WriteMeta(ctx context.Context, msg remote.Messa
 	}
 
 	return ctx, nil
+}
+
+func isTTHeader(msg remote.Message) bool {
+	transProto := msg.ProtocolInfo().TransProto
+	return transProto&transport.TTHeader == transport.TTHeader
 }
