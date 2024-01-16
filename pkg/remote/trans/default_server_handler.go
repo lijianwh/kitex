@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"reflect"
 	"runtime/debug"
 
 	"github.com/cloudwego/kitex/pkg/endpoint"
@@ -237,9 +238,9 @@ func (t *svrTransHandler) OnError(ctx context.Context, err error, conn net.Conn)
 	} else {
 		var de *kerrors.DetailedError
 		if ok := errors.As(err, &de); ok && de.Stack() != "" {
-			klog.CtxErrorf(ctx, "KITEX: processing request error, remoteService=%s, remoteAddr=%v, error=%s\nstack=%s", rService, rAddr, err.Error(), de.Stack())
+			klog.CtxErrorf(ctx, "KITEX: processing request error, remoteService=%s, remoteAddr=%v, error=%s, errorType=%s\nstack=%s", rService, rAddr, err.Error(), t.getErrorTypeInfo(err), de.Stack())
 		} else {
-			klog.CtxErrorf(ctx, "KITEX: processing request error, remoteService=%s, remoteAddr=%v, error=%s", rService, rAddr, err.Error())
+			klog.CtxErrorf(ctx, "KITEX: processing request error, remoteService=%s, remoteAddr=%v, error=%s, errorType=%s", rService, rAddr, err.Error(), t.getErrorTypeInfo(err))
 		}
 	}
 }
@@ -333,4 +334,18 @@ func getRemoteInfo(ri rpcinfo.RPCInfo, conn net.Conn) (string, net.Addr) {
 		}
 	}
 	return ri.From().ServiceName(), rAddr
+}
+
+func (t *svrTransHandler) getErrorTypeInfo(err error) string {
+	errTypeStr := fmt.Sprintf("isRemoteClosedErr=%v, %v", t.ext.IsRemoteClosedErr(err), reflect.TypeOf(err))
+	for {
+		if errU, ok := err.(interface{ Unwrap() error }); ok {
+			err = errU.Unwrap()
+			errTypeStr = fmt.Sprintf("%s: %v", errTypeStr, reflect.TypeOf(err))
+		} else {
+			return errTypeStr
+		}
+
+	}
+	return errTypeStr
 }
