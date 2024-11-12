@@ -68,6 +68,10 @@ type thriftCodec struct {
 	CodecType
 }
 
+type Raiser interface {
+	Raise(err error)
+}
+
 // Marshal implements the remote.PayloadCodec interface.
 func (c thriftCodec) Marshal(ctx context.Context, message remote.Message, out remote.ByteBuffer) error {
 	// 1. prepare info
@@ -112,7 +116,12 @@ func (c thriftCodec) Marshal(ctx context.Context, message remote.Message, out re
 	// encode with normal way
 	tProt := NewBinaryProtocol(out)
 	if err := tProt.WriteMessageBegin(methodName, thrift.TMessageType(msgType), seqID); err != nil {
-		return perrors.NewProtocolErrorWithMsg(fmt.Sprintf("thrift marshal, WriteMessageBegin failed: %s", err.Error()))
+		e := perrors.NewProtocolErrorWithMsg(fmt.Sprintf("thrift marshal, WriteMessageBegin failed: %s", err.Error()))
+		switch msg := data.(type) {
+		case Raiser:
+			msg.Raise(e)
+		}
+		return e
 	}
 	switch msg := data.(type) {
 	case MessageWriter:
